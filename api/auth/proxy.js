@@ -3,21 +3,24 @@ module.exports = async (req, res) => {
     const { handleAuthProxyRequest } = await import("@neondatabase/auth/server");
 
     const url = new URL(req.url, "http://localhost");
-    const path = url.pathname.replace(/^\/api\/auth\//, "");
-    const params = url.searchParams;
-    const queryString = params.toString();
+    const path = url.searchParams.get("path") || "";
+    const queryString = "";
 
     const NEON_AUTH_BASE_URL =
       process.env.NEON_AUTH_BASE_URL ||
       "https://ep-super-dawn-b5tkweht.neonauth.c-7.us-east-2.aws.neon.te/neondb/auth";
 
-    const cookieSecret = process.env.NEON_AUTH_COOKIE_SECRET || "fallback-secret-key-for-dev";
+    const cookieSecret =
+      process.env.NEON_AUTH_COOKIE_SECRET ||
+      "fallback-secret-key-for-dev-only-use-env-var";
+
+    const fetchRequest = new Request(url, {
+      method: req.method,
+      headers: req.headers,
+    });
 
     const response = await handleAuthProxyRequest({
-      request: new Request(url, {
-        method: req.method,
-        headers: req.headers,
-      }),
+      request: fetchRequest,
       path,
       baseUrl: NEON_AUTH_BASE_URL,
       cookieSecret,
